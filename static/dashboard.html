@@ -1,138 +1,125 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ACF ECHO | Nutrition & Health Live Dashboard</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACF ECHO SHIELD 2026 | Live MEAL Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#172033;font-family:Segoe UI,Arial,sans-serif}
-header{background:#16202a;color:#fff;padding:22px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-h1{font-size:23px;margin:0 0 5px}.sub{font-size:12px;color:#cbd5e1}
-button{border:0;border-radius:8px;padding:10px 15px;background:#1769aa;color:#fff;font-weight:700;cursor:pointer}.tabs button{background:#e8edf2;color:#344054}.tabs button.active{background:#1769aa;color:#fff}
-main{max-width:1500px;margin:auto;padding:20px}.panel,.card{background:#fff;border:1px solid #e1e7ee;border-radius:12px;box-shadow:0 1px 2px #00000008}
-.panel{padding:16px;margin-bottom:18px}.panel h2{font-size:16px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.card{padding:15px}.lbl{font-size:12px;color:#667085}.val{font-size:27px;font-weight:750;margin-top:6px}.small{font-size:11px;color:#667085;margin-top:3px}
-.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}label{font-size:11px;color:#667085;display:block;margin-bottom:5px}
-select,input{width:100%;padding:9px;border:1px solid #d0d5dd;border-radius:8px;background:#fff}
-.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chart{height:340px}.chart canvas{height:275px!important}
-.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}
-.table{overflow:auto;max-height:520px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid #eaecf0;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:#f9fafb}
-.status{font-size:12px;color:#667085}.ok{color:#079455}.err{color:#d92d20}
-.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef2f6;font-size:10px;font-weight:700}.good{background:#dcfae6;color:#067647}.warn{background:#fef0c7;color:#b54708}.bad{background:#fee4e2;color:#b42318}
-@media(max-width:1050px){.grid,.filters,.charts{grid-template-columns:1fr 1fr}}@media(max-width:600px){main{padding:12px}.grid,.filters,.charts{grid-template-columns:1fr}}
-</style>
-</head>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#172033;font:14px Segoe UI,Arial,sans-serif}
+header{background:#16202a;color:#fff;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{margin:0 0 4px;font-size:23px}.sub{font-size:12px;color:#cbd5e1}main{max-width:1550px;margin:auto;padding:20px}
+.panel,.card{background:#fff;border:1px solid #e2e7ed;border-radius:12px;box-shadow:0 1px 2px #00000008}.panel{padding:16px;margin-bottom:18px}.panel h2{font-size:16px;margin:0 0 14px}
+button{border:0;border-radius:8px;padding:10px 15px;background:#1769aa;color:#fff;font-weight:700;cursor:pointer}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tabs button{background:#e8edf2;color:#344054}.tabs button.active{background:#1769aa;color:#fff}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}label{display:block;font-size:11px;color:#667085;margin-bottom:5px}select,input{width:100%;padding:9px;border:1px solid #d0d5dd;border-radius:8px;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.alert{padding:11px 13px;border-radius:9px;margin:7px 0;border:1px solid #eaecf0}.alert.bad{background:#fff5f5;border-color:#fecdca}.alert.warn{background:#fffaeb;border-color:#fedf89}.alert.good{background:#f6fef9;border-color:#abefc6}.card{padding:15px}.lbl{font-size:12px;color:#667085}.val{font-size:26px;font-weight:750;margin-top:7px}.small{font-size:11px;color:#667085;margin-top:3px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chart{height:350px}.chart canvas{height:280px!important}
+.table{overflow:auto;max-height:560px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:9px;border-bottom:1px solid #eaecf0;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:#f9fafb}
+.status{font-size:12px;color:#667085}.ok{color:#079455}.err{color:#d92d20}.good{color:#067647}.warn{color:#b54708}.bad{color:#b42318}
+@media(max-width:1000px){.grid,.grid4,.filters,.charts{grid-template-columns:1fr 1fr}}@media(max-width:600px){main{padding:12px}.grid,.grid4,.filters,.charts{grid-template-columns:1fr}}
+</style></head>
 <body>
-<header>
-<div><h1>ACF ECHO | Nutrition & Health Live Dashboard</h1><div class="sub">IMAM • MIYCN • Health Data | Live KoboToolbox feed</div></div>
-<button id="refreshBtn" onclick="loadData()">↻ Refresh Data</button>
-</header>
+<header><div><h1>ACF ECHO SHIELD 2026 | Live MEAL Dashboard</h1><div class="sub">Nutrition & Health • IMAM • MIYCN • Health Data</div></div><button id="refresh" onclick="loadData()">↻ Refresh Data</button></header>
 <main>
 <section class="panel"><div id="status" class="status">Connecting to KoboToolbox…</div></section>
-
 <section class="panel"><h2>Filters</h2><div class="filters">
-<div><label>Register</label><select id="fReg" onchange="render()"><option value="">All registers</option><option>IMAM</option><option>MIYCN</option><option>Health</option></select></div>
-<div><label>Reporting month</label><select id="fMonth" onchange="render()"><option value="">All months</option></select></div>
-<div><label>LGA</label><select id="fLga" onchange="render()"><option value="">All LGAs</option></select></div>
-<div><label>Facility</label><select id="fFacility" onchange="render()"><option value="">All facilities</option></select></div>
-<div><label>Minimum submission date</label><input id="fDate" type="date" onchange="render()"></div>
+<div><label>Register</label><select id="fReg" onchange="render()"><option value="">All</option><option>IMAM</option><option>MIYCN</option><option>Health</option></select></div>
+<div><label>Reporting month</label><select id="fMonth" onchange="render()"><option value="">All</option></select></div>
+<div><label>LGA</label><select id="fLga" onchange="render()"><option value="">All</option></select></div>
+<div><label>Facility</label><select id="fFacility" onchange="render()"><option value="">All</option></select></div>
+<div><label>Submitted from</label><input id="fDate" type="date" onchange="render()"></div>
 </div></section>
 
 <section class="grid">
 <div class="card"><div class="lbl">Total submissions</div><div class="val" id="kTotal">0</div><div class="small">Current filters</div></div>
-<div class="card"><div class="lbl">IMAM submissions</div><div class="val" id="kImam">0</div><div class="small">Nutrition</div></div>
-<div class="card"><div class="lbl">MIYCN submissions</div><div class="val" id="kMiycn">0</div><div class="small">MIYCN</div></div>
-<div class="card"><div class="lbl">Health submissions</div><div class="val" id="kHealth">0</div><div class="small">Routine health</div></div>
-<div class="card"><div class="lbl">Facilities reporting</div><div class="val" id="kFacilities">0</div><div class="small">Unique facilities</div></div>
+<div class="card"><div class="lbl">IMAM</div><div class="val" id="kImam">0</div><div class="small">Nutrition register</div></div>
+<div class="card"><div class="lbl">MIYCN</div><div class="val" id="kMiycn">0</div><div class="small">MIYCN register</div></div>
+<div class="card"><div class="lbl">Health</div><div class="val" id="kHealth">0</div><div class="small">Health register</div></div>
+<div class="card"><div class="lbl">Facilities reporting</div><div class="val" id="kFac">0</div><div class="small">Unique facilities</div></div>
 </section>
+
+<section class="panel"><h2>MEAL Intelligence</h2><div class="grid4">
+<div class="card"><div class="lbl">Expected reports</div><div class="val" id="kExpected">0</div><div class="small">Facility × register × month</div></div>
+<div class="card"><div class="lbl">Complete reports</div><div class="val" id="kComplete">0</div><div class="small">Unique reporting units received</div></div>
+<div class="card"><div class="lbl">Reporting completeness</div><div class="val" id="kCoverage">0%</div><div class="small">Based on current filters</div></div>
+<div class="card"><div class="lbl">Missing reports</div><div class="val" id="kMissing">0</div><div class="small">Expected but not received</div></div>
+</div><div class="grid4" style="margin-top:12px">
+<div class="card"><div class="lbl">Submitted by month-end</div><div class="val" id="kSameMonth">0</div><div class="small">Submission date vs reporting month</div></div>
+<div class="card"><div class="lbl">Post-month submissions</div><div class="val" id="kPostMonth">0</div><div class="small">Submitted after month end</div></div>
+<div class="card"><div class="lbl">Median reporting lag</div><div class="val" id="kMedianLag">0d</div><div class="small">Days after reporting month-end</div></div>
+<div class="card"><div class="lbl">MEAL alerts</div><div class="val" id="kAlerts">0</div><div class="small">Reporting and performance flags</div></div>
+</div><div id="alerts" style="margin-top:12px"></div></section>
 
 <section class="panel"><div class="tabs">
-<button class="active" id="tabOverview" onclick="setTab('overview')">Overview</button>
-<button id="tabImam" onclick="setTab('imam')">IMAM</button>
-<button id="tabMiycn" onclick="setTab('miycn')">MIYCN</button>
-<button id="tabHealth" onclick="setTab('health')">Health</button>
-<button id="tabQuality" onclick="setTab('quality')">Data Quality</button>
-</div><div id="tabContent"></div></section>
+<button id="tOverview" class="active" onclick="tab('overview')">Overview</button><button id="tImam" onclick="tab('imam')">IMAM</button><button id="tMiycn" onclick="tab('miycn')">MIYCN</button><button id="tHealth" onclick="tab('health')">Health</button><button id="tQuality" onclick="tab('quality')">Data Quality</button>
+</div><div id="content"></div></section>
 
 <section class="charts">
-<div class="panel chart"><h2>Submissions by month</h2><canvas id="monthChart"></canvas></div>
-<div class="panel chart"><h2>Submissions by facility</h2><canvas id="facilityChart"></canvas></div>
-<div class="panel chart"><h2>IMAM screening</h2><canvas id="screenChart"></canvas></div>
-<div class="panel chart"><h2>IMAM exits</h2><canvas id="exitChart"></canvas></div>
+<div class="panel chart"><h2>Monthly submissions</h2><canvas id="cMonth"></canvas></div>
+<div class="panel chart"><h2>Facility submissions</h2><canvas id="cFacility"></canvas></div>
+<div class="panel chart"><h2>IMAM screening</h2><canvas id="cScreen"></canvas></div>
+<div class="panel chart"><h2>IMAM exits</h2><canvas id="cExit"></canvas></div>
 </section>
 
+<section class="panel"><h2>Facility reporting matrix</h2><div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>IMAM</th><th>MIYCN</th><th>Health</th><th>Last submission</th><th>Status</th></tr></thead><tbody id="matrix"></tbody></table></div></section>
 <section class="panel"><h2>Latest submissions</h2><div class="table"><table><thead><tr><th>Submitted</th><th>Register</th><th>Month</th><th>LGA</th><th>Facility</th><th>UUID</th></tr></thead><tbody id="latest"></tbody></table></div></section>
 </main>
-
 <script>
-let rows=[],charts={},activeTab='overview';
+let rows=[],charts={},active='overview';
+const FAC={
+dagirari_phc:['DAGIRARI PHC','Nguru'],maidashi_phc:['MAIDASHI PHC','Nguru'],ngarbi_phc:['NGARBI PHC','Nguru'],
+gasma_phc:['GASMA PHC','Karasuwa'],karasuwa_galo_phc:['KARASUWA GALO PHC','Karasuwa'],garin_gawo_phc:['GARIN GAWO PHC','Karasuwa'],waro_phc:['WARO PHC','Karasuwa'],
+kalgidi_phc:['KALGIDI PHC','Machina'],yalauwa_phc:['YALAUWA PHC','Machina']
+};
 const A={
-reg:['register_form','form_type','register'],month:['reporting_month','report_month','month'],lga:['lga','LGA','location_lga'],
-facility:['facility','facility_name','health_facility'],submitted:['end','_submission_time','submission_time','start'],uuid:['_uuid','uuid','_id'],
-start:['imam_start_m','imam_start_f'],newM:['imam_new_6_23_m','imam_new_24_59_m'],newF:['imam_new_6_23_f','imam_new_24_59_f'],
-adm:['imam_total_adm'],screen:['imam_screen_total'],green:['imam_screen_green_m','imam_screen_green_f'],
-yellow:['imam_screen_yellow_m','imam_screen_yellow_f'],red:['imam_screen_red_m','imam_screen_red_f'],oedema:['imam_screen_oedema_m','imam_screen_oedema_f'],
-recovered:['imam_recovered_total'],death:['imam_death_total'],defaulted:['imam_default_total'],nonrec:['imam_nonrecovered_total'],
-exits:['imam_total_exits'],endprog:['imam_end_program_total'],rutf:['imam_stock_closing_sachets'],
-miycnNew:['miycn_total_new_miycn_beneficiaries'],miycnSkill:['miycn_caregivers_0_23_first','miycn_pregnant_women_first','miycn_adolescent_girls_first'],
-miycnGroup:['miycn_total_group_reached'],miycnBF:['miycn_caregivers_infants_lt6_bf_difficulties'],miycnInfant:['miycn_infants_lt6_screened_supported'],
+reg:['register_form'],month:['reporting_month'],facility:['facility'],submitted:['end','_submission_time','submission_time','start'],uuid:['_uuid','uuid','_id'],
+startm:['imam_start_m'],startf:['imam_start_f'],admm:['imam_total_adm_m'],admf:['imam_total_adm_f'],adm:['imam_total_adm'],
+green:['imam_screen_green_m','imam_screen_green_f'],yellow:['imam_screen_yellow_m','imam_screen_yellow_f'],red:['imam_screen_red_m','imam_screen_red_f'],oedema:['imam_screen_oedema_m','imam_screen_oedema_f'],screen:['imam_screen_total'],
+rec:['imam_recovered_total'],death:['imam_death_total'],defa:['imam_default_total'],nonrec:['imam_nonrecovered_total'],exits:['imam_total_exits'],endprog:['imam_end_program_total'],
+rutfS:['imam_stock_closing_sachets'],rutfB:['imam_stock_closing_boxes'],
+miNew:['miycn_total_new_miycn_beneficiaries'],miSkill:['miycn_caregivers_0_23_first','miycn_pregnant_women_first','miycn_adolescent_girls_first'],miGroup:['miycn_total_group_reached'],miBF:['miycn_caregivers_infants_lt6_bf_difficulties'],miInf:['miycn_infants_lt6_screened_supported'],
 anc:['health_m_total_anc_visit'],pnc:['health_am_total'],fp:['health_bd_overall_total'],immun:['health_cm_total_children_immunization_all_types_of_vaccines_male','health_cn_female'],
-vita:['health_cr_micronutrient_and_deworming_vit_a_supplementation_male','health_cs_female'],deworm:['health_ct_deworming_male','health_cu_female'],
-malaria:['health_df_total'],diarrhoea:['health_dq_total'],arti:['health_eb_total'],opd:['health_ey_total_opd_consultations'],
-surv:['health_ez_surveillance_and_outbreak_response_immidately_reportable_'],referral:['health_fj_referal_services_community_to_health_facilities_male','health_fk_health_data_field_fk','health_fl_phc_to_next_level_facilities_male','health_fm_health_data_field_fm','health_fn_total_mf_m','health_fo_f','health_fp_health_data_field_fp']
+fullImm:['health_co_total_fully_immunized_discharged_weekly_male','health_cp_weekly_female'],vita:['health_cr_micronutrient_and_deworming_vit_a_supplementation_male','health_cs_female'],deworm:['health_ct_deworming_male','health_cu_female'],
+malaria:['health_df_total'],diarr:['health_dq_total'],arti:['health_eb_total'],opd:['health_ey_total_opd_consultations'],cholera:['health_ez_surveillance_and_outbreak_response_immidately_reportable_'],
 };
-const facilityLga={
-'DAGIRARI PHC':'Nguru','MAIDASHI PHC':'Nguru','MAIDASHE':'Nguru','NGARBI PHC':'Nguru',
-'KARASUWA GALO PHC':'Karasuwa','KARASUWA GALU':'Karasuwa','GASMA PHC':'Karasuwa','GASMA':'Karasuwa','WARO PHC':'Karasuwa','WARO':'Karasuwa','GARIN GAWO PHC':'Karasuwa','GARIN GAWO':'Karasuwa',
-'KALGIDI PHC':'Machina','KALGIDI':'Machina','YALAUWA PHC':'Machina','YALAUWA':'Machina','ABUJA PHC':'Machina','ABUJA':'Machina'
-};
-function p(o,keys){for(const k of keys)if(o[k]!==undefined&&o[k]!==null&&o[k]!=='')return o[k];return''}
-function n(v){let x=parseFloat(v);return Number.isFinite(x)?x:0}
-function reg(v){v=String(v||'').toLowerCase();return v.includes('imam')?'IMAM':(v.includes('miycn')||v.includes('miyc'))?'MIYCN':v.includes('health')?'Health':'Unknown'}
-function facility(r){return String(p(r,A.facility)||'').trim()}
-function lga(r){let direct=p(r,A.lga);if(direct)return String(direct).trim();let f=facility(r).toUpperCase();return facilityLga[f]||facilityLga[facility(r)]||'Unknown'}
-function monthLabel(v){let s=String(v||'');return s? s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():''}
+function p(o,k){for(const x of k)if(o[x]!==undefined&&o[x]!==null&&o[x]!=='')return o[x];return''}function n(v){let x=parseFloat(v);return isFinite(x)?x:0}
+function reg(v){v=String(v||'').toLowerCase();return v==='imam'?'IMAM':v==='miycn'?'MIYCN':v==='health'?'Health':'Unknown'}
+function fac(r){return p(r,A.facility)}function lga(r){let f=fac(r);return FAC[f]?FAC[f][1]:'Unknown'}function fname(v){return FAC[v]?FAC[v][0]:v||'Unknown'}
+function month(v){let x=String(v||'');return x?x.charAt(0).toUpperCase()+x.slice(1).toLowerCase():''}
 function uniq(a){return [...new Set(a.filter(Boolean).map(String))].sort()}
-function opts(id,vals,allLabel='All'){let s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">'+allLabel+'</option>'+vals.map(v=>'<option>'+v+'</option>').join('');if(vals.includes(old))s.value=old}
-async function loadData(){
- let btn=document.getElementById('refreshBtn'),st=document.getElementById('status');btn.disabled=true;st.className='status';st.textContent='Refreshing live data from KoboToolbox…';
- try{let r=await fetch('/api/data');let x=await r.json();if(!r.ok)throw Error(x.error||'API error');rows=x.results||[];
- opts('fMonth',uniq(rows.map(r=>monthLabel(p(r,A.month)))),'All months');opts('fLga',uniq(rows.map(lga)),'All LGAs');opts('fFacility',uniq(rows.map(facility)),'All facilities');
- st.className='status ok';st.textContent=`Live feed updated: ${rows.length.toLocaleString()} submissions • ${new Date().toLocaleString()}`;render()
- }catch(e){st.className='status err';st.textContent='Connection failed: '+e.message}finally{btn.disabled=false}
+function opts(id,vals){let s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">All</option>'+vals.map(v=>`<option value="${v}">${v}</option>`).join('');if(vals.includes(old))s.value=old}
+async function loadData(){let b=document.getElementById('refresh'),st=document.getElementById('status');b.disabled=true;st.className='status';st.textContent='Refreshing live data from KoboToolbox…';
+try{let r=await fetch('/api/data');let x=await r.json();if(!r.ok)throw Error(x.error||'API error');rows=x.results||[];opts('fMonth',uniq(rows.map(r=>month(p(r,A.month)))));opts('fLga',uniq(rows.map(lga)));opts('fFacility',uniq(rows.map(r=>fname(fac(r)))));
+st.className='status ok';st.textContent=`Live feed updated: ${rows.length.toLocaleString()} submissions • ${new Date().toLocaleString()}`;render()}catch(e){st.className='status err';st.textContent='Connection failed: '+e.message}finally{b.disabled=false}}
+function filtered(){let rg=fReg.value,mo=fMonth.value,lg=fLga.value,fa=fFacility.value,dt=fDate.value;return rows.filter(r=>(!rg||reg(p(r,A.reg))===rg)&&(!mo||month(p(r,A.month))===mo)&&(!lg||lga(r)===lg)&&(!fa||fname(fac(r))===fa)&&(!dt||String(p(r,A.submitted)).slice(0,10)>=dt))}
+function sum(a,k){return a.reduce((s,r)=>s+n(p(r,A[k])),0)}function card(a,b,c){return `<div class="card"><div class="lbl">${a}</div><div class="val">${b}</div><div class="small">${c||''}</div></div>`}
+function monthNum(v){let m=String(v||'').toLowerCase();return ['january','february','march','april','may','june','july','august','september','october','november','december'].indexOf(m)+1}
+function monthKey(v){let n=monthNum(v);return n?'2026-'+String(n).padStart(2,'0'):''}
+function reportKey(r){return fac(r)+'|'+monthKey(p(r,A.month))+'|'+reg(p(r,A.reg))}
+function submissionDate(r){let v=p(r,A.submitted);if(!v)return null;let d=new Date(v);return isNaN(d)?null:d}
+function reportingEnd(r){let m=monthNum(p(r,A.month));return m?new Date(2026,m,0,23,59,59):null}
+function intelligence(a){
+ const facilities=Object.keys(FAC), months=uniq(a.map(r=>monthKey(p(r,A.month)))).filter(Boolean), regs=['IMAM','MIYCN','Health'];
+ const expected=facilities.length*months.length*regs.length, keys=new Set(a.map(reportKey)), complete=keys.size, missing=Math.max(expected-complete,0), coverage=expected?complete/expected*100:0;
+ let same=0,post=0,lags=[];
+ a.forEach(r=>{let d=submissionDate(r),e=reportingEnd(r);if(!d||!e)return;let days=(d-e)/86400000;if(days<=0)same++;else{post++;lags.push(days)}});
+ lags.sort((x,y)=>x-y);let median=lags.length?(lags.length%2?lags[(lags.length-1)/2]:(lags[lags.length/2-1]+lags[lags.length/2])/2):0;
+ let alertItems=[];
+ if(missing>0)alertItems.push({c:'bad',title:'Missing reporting units',text:`${missing.toLocaleString()} expected facility/register/month combinations have no submission in the current filter.`});
+ if(post>0)alertItems.push({c:'warn',title:'Post-month submissions',text:`${post.toLocaleString()} submissions were received after the end of their reporting month.`});
+ const im=a.filter(r=>reg(p(r,A.reg))==='IMAM'), exits=sum(im,'exits'), rec=sum(im,'rec'), defa=sum(im,'defa'), death=sum(im,'death');
+ if(exits>0){let rp=rec/exits*100,dp=defa/exits*100,mp=death/exits*100;if(dp>15)alertItems.push({c:'warn',title:'High IMAM default rate',text:`Default rate is ${dp.toFixed(1)}% of recorded exits.`});if(mp>5)alertItems.push({c:'bad',title:'IMAM mortality alert',text:`Death rate is ${mp.toFixed(1)}% of recorded exits.`});if(rp<75)alertItems.push({c:'warn',title:'Low IMAM recovery rate',text:`Recovery rate is ${rp.toFixed(1)}% of recorded exits.`});}
+ kExpected.textContent=expected.toLocaleString();kComplete.textContent=complete.toLocaleString();kCoverage.textContent=coverage.toFixed(1)+'%';kMissing.textContent=missing.toLocaleString();kSameMonth.textContent=same.toLocaleString();kPostMonth.textContent=post.toLocaleString();kMedianLag.textContent=median.toFixed(1)+'d';kAlerts.textContent=alertItems.length.toLocaleString();
+ alerts.innerHTML=alertItems.length?alertItems.map(x=>`<div class="alert ${x.c}"><strong>${x.title}</strong><span>${x.text}</span></div>`).join(''):'<div class="alert good"><strong>No MEAL alerts detected</strong><span>The current filtered data does not trigger the configured reporting or performance flags.</span></div>';
 }
-function filtered(){let rg=fReg.value,mo=fMonth.value,lg=fLga.value,fa=fFacility.value,dt=fDate.value;return rows.filter(r=>(!rg||reg(p(r,A.reg))===rg)&&(!mo||monthLabel(p(r,A.month))===mo)&&(!lg||lga(r)===lg)&&(!fa||facility(r)===fa)&&(!dt||String(p(r,A.submitted)).slice(0,10)>=dt))}
-function sum(a,key){return a.reduce((s,r)=>s+n(p(r,A[key])),0)}
-function countReg(a,x){return a.filter(r=>reg(p(r,A.reg))===x).length}
-function card(label,value,small=''){return `<div class="card"><div class="lbl">${label}</div><div class="val">${value}</div><div class="small">${small}</div></div>`}
-function render(){
- let a=filtered();document.getElementById('kTotal').textContent=a.length.toLocaleString();document.getElementById('kImam').textContent=countReg(a,'IMAM').toLocaleString();document.getElementById('kMiycn').textContent=countReg(a,'MIYCN').toLocaleString();document.getElementById('kHealth').textContent=countReg(a,'Health').toLocaleString();document.getElementById('kFacilities').textContent=uniq(a.map(facility)).length.toLocaleString();
- renderTab(a);draw(a);renderLatest(a)
-}
-function renderTab(a){
- let im=a.filter(r=>reg(p(r,A.reg))==='IMAM'),mi=a.filter(r=>reg(p(r,A.reg))==='MIYCN'),he=a.filter(r=>reg(p(r,A.reg))==='Health');
- const tc=document.getElementById('tabContent');
- if(activeTab==='overview'){tc.innerHTML='<div class="grid">'+card('MUAC screened',sum(im,'screen').toLocaleString(),'IMAM')+card('SAM / red',sum(im,'red').toLocaleString(),'MUAC <11.5 cm')+card('MAM / yellow',sum(im,'yellow').toLocaleString(),'MUAC 11.5–12.4 cm')+card('Normal / green',sum(im,'green').toLocaleString(),'MUAC >12.5 cm')+card('Closing RUTF sachets',sum(im,'rutf').toLocaleString(),'Stock balance')+'</div>';return}
- if(activeTab==='imam'){tc.innerHTML='<div class="grid">'+card('Starting caseload',sum(im,'start').toLocaleString(),'Male + female')+card('Total admissions',sum(im,'adm').toLocaleString(),'IMAM')+card('MUAC screened',sum(im,'screen').toLocaleString(),'All screening')+card('Recovered',sum(im,'recovered').toLocaleString(),'E1')+card('Total exits',sum(im,'exits').toLocaleString(),'E1–E4 + transfers')+'</div><div class="grid">'+card('Death',sum(im,'death').toLocaleString(),'E2')+card('Defaulted',sum(im,'defaulted').toLocaleString(),'E3')+card('Non-recovered',sum(im,'nonrec').toLocaleString(),'E4')+card('End programme',sum(im,'endprog').toLocaleString(),'End caseload')+card('RUTF closing sachets',sum(im,'rutf').toLocaleString(),'Stock balance')+'</div>';return}
- if(activeTab==='miycn'){tc.innerHTML='<div class="grid">'+card('New MIYCN beneficiaries',sum(mi,'miycnNew').toLocaleString(),'Reporting month')+card('Skilled counselling',sum(mi,'miycnSkill').toLocaleString(),'Caregivers + pregnant + adolescent')+card('Group counselling',sum(mi,'miycnGroup').toLocaleString(),'Female + male')+card('BF difficulties counselled',sum(mi,'miycnBF').toLocaleString(),'Infants <6 months')+card('Infants screened/supported',sum(mi,'miycnInfant').toLocaleString(),'Breastfeeding difficulties')+'</div>';return}
- if(activeTab==='health'){tc.innerHTML='<div class="grid">'+card('ANC visits',sum(he,'anc').toLocaleString(),'Total ANC')+card('PNC',sum(he,'pnc').toLocaleString(),'Total')+card('Family planning',sum(he,'fp').toLocaleString(),'Overall total')+card('Fully immunization count',sum(he,'immun').toLocaleString(),'Male + female')+card('Total OPD',sum(he,'opd').toLocaleString(),'All OPD')+'</div><div class="grid">'+card('Vitamin A',sum(he,'vita').toLocaleString(),'Male + female')+card('Deworming',sum(he,'deworm').toLocaleString(),'Male + female')+card('Malaria',sum(he,'malaria').toLocaleString(),'All ages')+card('Diarrhoea',sum(he,'diarrhoea').toLocaleString(),'All ages')+card('ARTI',sum(he,'arti').toLocaleString(),'All ages')+'</div>';return}
- if(activeTab==='quality'){
-   const expectedFacilities=uniq(rows.map(facility)).length||0, months=uniq(rows.map(r=>monthLabel(p(r,A.month)))).length||0;
-   const expected=expectedFacilities*months*3, coverage=expected?Math.min(100,a.length/expected*100):0;
-   const keys=new Set(),dups=[];a.forEach(r=>{let k=[monthLabel(p(r,A.month)),facility(r),reg(p(r,A.reg))].join('|');if(keys.has(k))dups.push(k);keys.add(k)});
-   const missing=Math.max(0,expected-a.length);
-   tc.innerHTML='<div class="grid">'+card('Expected submissions',expected.toLocaleString(),`${expectedFacilities} facilities × ${months} months × 3 registers`)+card('Received',a.length.toLocaleString(),'Current filters')+card('Coverage',coverage.toFixed(1)+'%','Estimated reporting coverage')+card('Potential duplicates',dups.length.toLocaleString(),'Same month + facility + register')+card('Potential missing',missing.toLocaleString(),'Estimated')+'</div><p class="small">Coverage is an operational estimate based on the facilities and reporting months present in the live dataset. It should be interpreted after confirming the project’s intended reporting schedule.</p>';
- }
-}
-function setTab(t){activeTab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById(t==='overview'?'tabOverview':t==='imam'?'tabImam':t==='miycn'?'tabMiycn':t==='health'?'tabHealth':'tabQuality').classList.add('active');render()}
+function render(){let a=filtered(),im=a.filter(r=>reg(p(r,A.reg))==='IMAM'),mi=a.filter(r=>reg(p(r,A.reg))==='MIYCN'),he=a.filter(r=>reg(p(r,A.reg))==='Health');kTotal.textContent=a.length.toLocaleString();kImam.textContent=im.length;kMiycn.textContent=mi.length;kHealth.textContent=he.length;kFac.textContent=uniq(a.map(fac)).length;intelligence(a);renderTab(a,im,mi,he);draw(a,im);matrixTable();latestTable(a)}
+function renderTab(a,im,mi,he){let c=document.getElementById('content');
+if(active==='overview')c.innerHTML='<div class="grid">'+card('MUAC screened',sum(im,'screen').toLocaleString(),'IMAM')+card('SAM / Red',sum(im,'red').toLocaleString(),'MUAC screening')+card('MAM / Yellow',sum(im,'yellow').toLocaleString(),'MUAC screening')+card('Normal / Green',sum(im,'green').toLocaleString(),'MUAC screening')+card('Closing RUTF sachets',sum(im,'rutfS').toLocaleString(),'Stock balance')+'</div>';
+if(active==='imam')c.innerHTML='<div class="grid">'+card('Starting caseload',(sum(im,'startm')+sum(im,'startf')).toLocaleString(),'Male + female')+card('Admissions',sum(im,'adm').toLocaleString(),'Total')+card('Recovered',sum(im,'rec').toLocaleString(),'E1')+card('Defaulted',sum(im,'defa').toLocaleString(),'E3')+card('Deaths',sum(im,'death').toLocaleString(),'E2')+'</div><div class="grid">'+card('Non-recovered',sum(im,'nonrec').toLocaleString(),'E4')+card('Total exits',sum(im,'exits').toLocaleString(),'G')+card('End programme',sum(im,'endprog').toLocaleString(),'H')+card('RUTF sachets',sum(im,'rutfS').toLocaleString(),'Closing balance')+card('RUTF boxes',sum(im,'rutfB').toLocaleString(),'Closing balance')+'</div>';
+if(active==='miycn')c.innerHTML='<div class="grid">'+card('New MIYCN beneficiaries',sum(mi,'miNew').toLocaleString(),'Reporting month')+card('Skilled counselling',sum(mi,'miSkill').toLocaleString(),'One-on-one')+card('Group counselling',sum(mi,'miGroup').toLocaleString(),'Total reached')+card('BF difficulties counselled',sum(mi,'miBF').toLocaleString(),'Infants <6 months')+card('Infants screened/supported',sum(mi,'miInf').toLocaleString(),'Breastfeeding')+'</div>';
+if(active==='health')c.innerHTML='<div class="grid">'+card('ANC visits',sum(he,'anc').toLocaleString(),'Total ANC')+card('PNC',sum(he,'pnc').toLocaleString(),'Total')+card('Family planning',sum(he,'fp').toLocaleString(),'Overall')+card('Children immunized',sum(he,'immun').toLocaleString(),'All vaccine types')+card('Fully immunized',sum(he,'fullImm').toLocaleString(),'Weekly')+'</div><div class="grid">'+card('Vitamin A',sum(he,'vita').toLocaleString(),'Male + female')+card('Deworming',sum(he,'deworm').toLocaleString(),'Male + female')+card('Malaria',sum(he,'malaria').toLocaleString(),'Total')+card('Diarrhoea',sum(he,'diarr').toLocaleString(),'Total')+card('ARTI',sum(he,'arti').toLocaleString(),'Total')+'</div><div class="grid">'+card('OPD consultations',sum(he,'opd').toLocaleString(),'Total')+card('Cholera reported',sum(he,'cholera').toLocaleString(),'Surveillance')+'</div>';
+if(active==='quality'){let fs=Object.keys(FAC),ms=uniq(a.map(r=>monthKey(p(r,A.month)))).filter(Boolean),regs=['IMAM','MIYCN','Health'];let received=new Set(a.map(reportKey)),missing=[];fs.forEach(f=>ms.forEach(m=>regs.forEach(t=>{let k=f+'|'+m+'|'+t;if(!received.has(k))missing.push([FAC[f][0],FAC[f][1],new Date(m+'-01T00:00:00').toLocaleString('en-US',{month:'long'}),t])})));let expected=fs.length*ms.length*3,coverage=expected?received.size/expected*100:0;c.innerHTML='<div class="grid">'+card('Expected submissions',expected.toLocaleString(),'9 facilities × months × 3 registers')+card('Unique reports',received.size.toLocaleString(),'Duplicate-safe count')+card('Completeness',coverage.toFixed(1)+'%','Current filters')+card('Missing reports',missing.length.toLocaleString(),'Facility/register/month')+'</div><h3 style="margin-top:20px">Missing reporting units</h3><div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>Month</th><th>Register</th></tr></thead><tbody>'+(missing.length?missing.map(x=>'<tr><td>'+x[0]+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td><td>'+x[3]+'</td></tr>').join(''):'<tr><td colspan="4">No missing reporting units in the current filters.</td></tr>')+'</tbody></table></div>'}}
+function tab(t){active=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById(t==='overview'?'tOverview':t==='imam'?'tImam':t==='miycn'?'tMiycn':t==='health'?'tHealth':'tQuality').classList.add('active');render()}
 function chart(id,type,labels,data,legend=false){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data:{labels,datasets:[{data}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:legend}}}})}
-function draw(a){
- let m={};a.forEach(r=>{let k=monthLabel(p(r,A.month))||'Unknown';m[k]=(m[k]||0)+1});chart('monthChart','line',Object.keys(m),Object.values(m));
- m={};a.forEach(r=>{let k=facility(r)||'Unknown';m[k]=(m[k]||0)+1});chart('facilityChart','bar',Object.keys(m),Object.values(m));
- let im=a.filter(r=>reg(p(r,A.reg))==='IMAM');chart('screenChart','bar',['Normal','MAM','SAM','Oedema'],[sum(im,'green'),sum(im,'yellow'),sum(im,'red'),sum(im,'oedema')]);
- chart('exitChart','bar',['Recovered','Defaulted','Death','Non-recovered'],[sum(im,'recovered'),sum(im,'defaulted'),sum(im,'death'),sum(im,'nonrec')])
-}
-function renderLatest(a){document.getElementById('latest').innerHTML=a.slice().sort((x,y)=>String(p(y,A.submitted)).localeCompare(String(p(x,A.submitted)))).slice(0,100).map(r=>`<tr><td>${p(r,A.submitted)}</td><td>${reg(p(r,A.reg))}</td><td>${monthLabel(p(r,A.month))}</td><td>${lga(r)}</td><td>${facility(r)}</td><td>${p(r,A.uuid)}</td></tr>`).join('')||'<tr><td colspan="6">No matching submissions.</td></tr>'}
+function draw(a,im){let m={};a.forEach(r=>{let k=month(p(r,A.month))||'Unknown';m[k]=(m[k]||0)+1});chart('cMonth','line',Object.keys(m),Object.values(m));m={};a.forEach(r=>{let k=fname(fac(r));m[k]=(m[k]||0)+1});chart('cFacility','bar',Object.keys(m),Object.values(m));chart('cScreen','bar',['Normal','MAM','SAM','Oedema'],[sum(im,'green'),sum(im,'yellow'),sum(im,'red'),sum(im,'oedema')]);chart('cExit','bar',['Recovered','Defaulted','Death','Non-recovered'],[sum(im,'rec'),sum(im,'defa'),sum(im,'death'),sum(im,'nonrec')])}
+function matrixTable(){let fs=Object.keys(FAC),a=filtered();document.getElementById('matrix').innerHTML=fs.map(k=>{let f=FAC[k][0],lg=FAC[k][1],x=a.filter(r=>fac(r)===k),types=['IMAM','MIYCN','Health'];let has=t=>x.some(r=>reg(p(r,A.reg))===t);let last=x.map(r=>p(r,A.submitted)).filter(Boolean).sort().reverse()[0]||'';let complete=types.every(has);return `<tr><td>${f}</td><td>${lg}</td><td>${has('IMAM')?'✓':'—'}</td><td>${has('MIYCN')?'✓':'—'}</td><td>${has('Health')?'✓':'—'}</td><td>${last?new Date(last).toLocaleString():'—'}</td><td class="${complete?'good':'warn'}">${complete?'Complete':'Incomplete'}</td></tr>`}).join('')}
+function latestTable(a){document.getElementById('latest').innerHTML=a.slice().sort((x,y)=>String(p(y,A.submitted)).localeCompare(String(p(x,A.submitted)))).slice(0,100).map(r=>`<tr><td>${p(r,A.submitted)}</td><td>${reg(p(r,A.reg))}</td><td>${month(p(r,A.month))}</td><td>${lga(r)}</td><td>${fname(fac(r))}</td><td>${p(r,A.uuid)}</td></tr>`).join('')||'<tr><td colspan="6">No submissions.</td></tr>'}
 loadData();setInterval(loadData,300000);
-</script>
-</body></html>
+</script></body></html>
