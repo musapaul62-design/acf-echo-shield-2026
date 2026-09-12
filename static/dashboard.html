@@ -1,6 +1,6 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ACF ECHO SHIELD 2026 | Live MEAL Dashboard</title>
+<title>ACF ECHO SHIELD 2026–2027 | Live MEAL Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#172033;font:14px Segoe UI,Arial,sans-serif}
@@ -16,10 +16,11 @@ button{border:0;border-radius:8px;padding:10px 15px;background:#1769aa;color:#ff
 @media(max-width:1000px){.grid,.grid4,.filters,.charts{grid-template-columns:1fr 1fr}}@media(max-width:600px){main{padding:12px}.grid,.grid4,.filters,.charts{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><div><h1>ACF ECHO SHIELD 2026 | Live MEAL Dashboard</h1><div class="sub">Nutrition & Health • IMAM • MIYCN • Health Intelligence</div></div><button id="refresh" onclick="loadData()">↻ Refresh Data</button></header>
+<header><div><h1>ACF ECHO SHIELD 2026–2027 | Live MEAL Dashboard</h1><div class="sub">Nutrition & Health • IMAM • MIYCN • Health Intelligence</div></div><button id="refresh" onclick="loadData()">↻ Refresh Data</button></header>
 <main>
 <section class="panel"><div id="status" class="status">Connecting to KoboToolbox…</div></section>
 <section class="panel"><h2>Filters</h2><div class="filters">
+<div><label>Year</label><select id="fYear" onchange="render()"><option value="">All</option></select></div>
 <div><label>Register</label><select id="fReg" onchange="render()"><option value="">All</option><option>IMAM</option><option>MIYCN</option><option>Health</option></select></div>
 <div><label>Reporting month</label><select id="fMonth" onchange="render()"><option value="">All</option></select></div>
 <div><label>LGA</label><select id="fLga" onchange="render()"><option value="">All</option></select></div>
@@ -59,7 +60,7 @@ button{border:0;border-radius:8px;padding:10px 15px;background:#1769aa;color:#ff
 </section>
 
 <section class="panel"><h2>Facility reporting matrix</h2><div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>IMAM</th><th>MIYCN</th><th>Health</th><th>Last submission</th><th>Status</th></tr></thead><tbody id="matrix"></tbody></table></div></section>
-<section class="panel"><h2>Latest submissions</h2><div class="table"><table><thead><tr><th>Submitted</th><th>Register</th><th>Month</th><th>LGA</th><th>Facility</th><th>UUID</th></tr></thead><tbody id="latest"></tbody></table></div></section>
+<section class="panel"><h2>Latest submissions</h2><div class="table"><table><thead><tr><th>Submitted</th><th>Register</th><th>Year</th><th>Month</th><th>LGA</th><th>Facility</th><th>UUID</th></tr></thead><tbody id="latest"></tbody></table></div></section>
 </main>
 <script>
 let rows=[],charts={},active='overview';
@@ -69,7 +70,7 @@ gasma_phc:['GASMA PHC','Karasuwa'],karasuwa_galo_phc:['KARASUWA GALO PHC','Karas
 kalgidi_phc:['KALGIDI PHC','Machina'],yalauwa_phc:['YALAUWA PHC','Machina']
 };
 const A={
-reg:['register_form'],month:['reporting_month'],facility:['facility'],submitted:['end','_submission_time','submission_time','start'],uuid:['_uuid','uuid','_id'],
+reg:['register_form'],year:['Year','year'],month:['reporting_month'],facility:['facility'],submitted:['end','_submission_time','submission_time','start'],uuid:['_uuid','uuid','_id'],
 startm:['imam_start_m'],startf:['imam_start_f'],admm:['imam_total_adm_m'],admf:['imam_total_adm_f'],adm:['imam_total_adm'],
 green:['imam_screen_green_m','imam_screen_green_f'],yellow:['imam_screen_yellow_m','imam_screen_yellow_f'],red:['imam_screen_red_m','imam_screen_red_f'],oedema:['imam_screen_oedema_m','imam_screen_oedema_f'],screen:['imam_screen_total'],
 rec:['imam_recovered_total'],death:['imam_death_total'],defa:['imam_default_total'],nonrec:['imam_nonrecovered_total'],exits:['imam_total_exits'],endprog:['imam_end_program_total'],
@@ -85,20 +86,23 @@ function p(o,k){for(const x of k)if(o[x]!==undefined&&o[x]!==null&&o[x]!=='')ret
 function reg(v){v=String(v||'').toLowerCase();return v==='imam'?'IMAM':v==='miycn'?'MIYCN':v==='health'?'Health':'Unknown'}
 function fac(r){return p(r,A.facility)}function lga(r){let f=fac(r);return FAC[f]?FAC[f][1]:'Unknown'}function fname(v){return FAC[v]?FAC[v][0]:v||'Unknown'}
 function month(v){let x=String(v||'');return x?x.charAt(0).toUpperCase()+x.slice(1).toLowerCase():''}
+function year(r){let y=String(p(r,A.year)||'').trim();return y||'2026'}
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function uniq(a){return [...new Set(a.filter(Boolean).map(String))].sort()}
+function monthOptions(a){let vals=[...new Set(a.map(r=>month(p(r,A.month))).filter(Boolean))];return MONTHS.filter(m=>vals.includes(m)).concat(vals.filter(m=>!MONTHS.includes(m)).sort())}
 function opts(id,vals){let s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">All</option>'+vals.map(v=>`<option value="${v}">${v}</option>`).join('');if(vals.includes(old))s.value=old}
 async function loadData(){let b=document.getElementById('refresh'),st=document.getElementById('status');b.disabled=true;st.className='status';st.textContent='Refreshing live data from KoboToolbox…';
-try{let r=await fetch('/api/data');let x=await r.json();if(!r.ok)throw Error(x.error||'API error');rows=x.results||[];opts('fMonth',uniq(rows.map(r=>month(p(r,A.month)))));opts('fLga',uniq(rows.map(lga)));opts('fFacility',uniq(rows.map(r=>fname(fac(r)))));
+try{let r=await fetch('/api/data');let x=await r.json();if(!r.ok)throw Error(x.error||'API error');rows=x.results||[];opts('fYear',uniq(rows.map(year)));opts('fMonth',monthOptions(rows));opts('fLga',uniq(rows.map(lga)));opts('fFacility',uniq(rows.map(r=>fname(fac(r)))));
 st.className='status ok';st.textContent=`Live feed updated: ${rows.length.toLocaleString()} submissions • ${new Date().toLocaleString()}`;render()}catch(e){st.className='status err';st.textContent='Connection failed: '+e.message}finally{b.disabled=false}}
-function filtered(){let rg=fReg.value,mo=fMonth.value,lg=fLga.value,fa=fFacility.value,dt=fDate.value;return rows.filter(r=>(!rg||reg(p(r,A.reg))===rg)&&(!mo||month(p(r,A.month))===mo)&&(!lg||lga(r)===lg)&&(!fa||fname(fac(r))===fa)&&(!dt||String(p(r,A.submitted)).slice(0,10)>=dt))}
+function filtered(){let yr=fYear.value,rg=fReg.value,mo=fMonth.value,lg=fLga.value,fa=fFacility.value,dt=fDate.value;return rows.filter(r=>(!yr||year(r)===yr)&&(!rg||reg(p(r,A.reg))===rg)&&(!mo||month(p(r,A.month))===mo)&&(!lg||lga(r)===lg)&&(!fa||fname(fac(r))===fa)&&(!dt||String(p(r,A.submitted)).slice(0,10)>=dt))}
 function sum(a,k){return a.reduce((s,r)=>s+n(p(r,A[k])),0)}function sumFields(a,fields){return a.reduce((s,r)=>s+fields.reduce((z,k)=>z+n(r[k]),0),0)}function pct(x,d){return d?((x/d)*100):0}function rateCard(label,value,note,cls){return `<div class="card"><div class="lbl">${label}</div><div class="val ${cls||''}">${value}</div><div class="small">${note||''}</div></div>`}function card(a,b,c){return `<div class="card"><div class="lbl">${a}</div><div class="val">${b}</div><div class="small">${c||''}</div></div>`}
 function monthNum(v){let m=String(v||'').toLowerCase();return ['january','february','march','april','may','june','july','august','september','october','november','december'].indexOf(m)+1}
-function monthKey(v){let n=monthNum(v);return n?'2026-'+String(n).padStart(2,'0'):''}
-function reportKey(r){return fac(r)+'|'+monthKey(p(r,A.month))+'|'+reg(p(r,A.reg))}
+function monthKey(r){let n=monthNum(p(r,A.month));return n?year(r)+'-'+String(n).padStart(2,'0'):''}
+function reportKey(r){return fac(r)+'|'+monthKey(r)+'|'+reg(p(r,A.reg))}
 function submissionDate(r){let v=p(r,A.submitted);if(!v)return null;let d=new Date(v);return isNaN(d)?null:d}
-function reportingEnd(r){let m=monthNum(p(r,A.month));return m?new Date(2026,m,0,23,59,59):null}
+function reportingEnd(r){let m=monthNum(p(r,A.month));let y=parseInt(year(r),10);return m&&isFinite(y)?new Date(y,m,0,23,59,59):null}
 function intelligence(a){
- const facilities=Object.keys(FAC), months=uniq(a.map(r=>monthKey(p(r,A.month)))).filter(Boolean), regs=['IMAM','MIYCN','Health'];
+ const facilities=Object.keys(FAC), months=uniq(a.map(r=>monthKey(r)).filter(Boolean)), regs=['IMAM','MIYCN','Health'];
  const expected=facilities.length*months.length*regs.length, keys=new Set(a.map(reportKey)), complete=keys.size, missing=Math.max(expected-complete,0), coverage=expected?complete/expected*100:0;
  let same=0,post=0,lags=[];
  a.forEach(r=>{let d=submissionDate(r),e=reportingEnd(r);if(!d||!e)return;let days=(d-e)/86400000;if(days<=0)same++;else{post++;lags.push(days)}});
@@ -212,7 +216,7 @@ if(active==='health'){
  '<h3 style="margin:22px 0 10px">Health performance by facility</h3>'+healthFacilityTable(he)+
  '<h3 style="margin:22px 0 10px">Surveillance verification</h3>'+surveillanceTable(he);
 }
-if(active==='quality'){let fs=Object.keys(FAC),ms=uniq(a.map(r=>monthKey(p(r,A.month)))).filter(Boolean),regs=['IMAM','MIYCN','Health'];let received=new Set(a.map(reportKey)),missing=[];fs.forEach(f=>ms.forEach(m=>regs.forEach(t=>{let k=f+'|'+m+'|'+t;if(!received.has(k))missing.push([FAC[f][0],FAC[f][1],new Date(m+'-01T00:00:00').toLocaleString('en-US',{month:'long'}),t])})));let expected=fs.length*ms.length*3,coverage=expected?received.size/expected*100:0;c.innerHTML='<div class="grid">'+card('Expected submissions',expected.toLocaleString(),'9 facilities × months × 3 registers')+card('Unique reports',received.size.toLocaleString(),'Duplicate-safe count')+card('Completeness',coverage.toFixed(1)+'%','Current filters')+card('Missing reports',missing.length.toLocaleString(),'Facility/register/month')+'</div><h3 style="margin-top:20px">Missing reporting units</h3><div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>Month</th><th>Register</th></tr></thead><tbody>'+(missing.length?missing.map(x=>'<tr><td>'+x[0]+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td><td>'+x[3]+'</td></tr>').join(''):'<tr><td colspan="4">No missing reporting units in the current filters.</td></tr>')+'</tbody></table></div>'}}
+if(active==='quality'){let fs=Object.keys(FAC),ms=uniq(a.map(r=>monthKey(r)).filter(Boolean)),regs=['IMAM','MIYCN','Health'];let received=new Set(a.map(reportKey)),missing=[];fs.forEach(f=>ms.forEach(m=>regs.forEach(t=>{let k=f+'|'+m+'|'+t;if(!received.has(k))missing.push([FAC[f][0],FAC[f][1],new Date(m+'-01T00:00:00').toLocaleString('en-US',{year:'numeric',month:'long'}),t])})));let expected=fs.length*ms.length*3,coverage=expected?received.size/expected*100:0;c.innerHTML='<div class="grid">'+card('Expected submissions',expected.toLocaleString(),'9 facilities × months × 3 registers')+card('Unique reports',received.size.toLocaleString(),'Duplicate-safe count')+card('Completeness',coverage.toFixed(1)+'%','Current filters')+card('Missing reports',missing.length.toLocaleString(),'Facility/register/month')+'</div><h3 style="margin-top:20px">Missing reporting units</h3><div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>Month</th><th>Register</th></tr></thead><tbody>'+(missing.length?missing.map(x=>'<tr><td>'+x[0]+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td><td>'+x[3]+'</td></tr>').join(''):'<tr><td colspan="4">No missing reporting units in the current filters.</td></tr>')+'</tbody></table></div>'}}
 function healthFacilityTable(he){
  let fs=Object.keys(FAC),html='<div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>ANC</th><th>PNC</th><th>FP</th><th>Immunized</th><th>Vit A</th><th>Deworming</th><th>Malaria</th><th>Diarrhoea</th><th>ARTI</th><th>OPD</th><th>Referrals</th><th>Flag</th></tr></thead><tbody>';
  fs.forEach(k=>{let x=he.filter(r=>fac(r)===k),flags=[];if(!x.length)flags.push('No Health');let vals={anc:sum(x,'anc'),pnc:sum(x,'pnc'),fp:sum(x,'fp'),immun:sumFields(x,A.immun),vita:sumFields(x,A.vita),deworm:sumFields(x,A.deworm),malaria:sum(x,'malaria'),diarr:sum(x,'diarr'),arti:sum(x,'arti'),opd:sum(x,'opd'),ref:sum(x,'refTotal')};if(x.length&&Object.values(vals).every(v=>v===0))flags.push('No activity');html+=`<tr><td>${FAC[k][0]}</td><td>${FAC[k][1]}</td><td>${vals.anc.toLocaleString()}</td><td>${vals.pnc.toLocaleString()}</td><td>${vals.fp.toLocaleString()}</td><td>${vals.immun.toLocaleString()}</td><td>${vals.vita.toLocaleString()}</td><td>${vals.deworm.toLocaleString()}</td><td>${vals.malaria.toLocaleString()}</td><td>${vals.diarr.toLocaleString()}</td><td>${vals.arti.toLocaleString()}</td><td>${vals.opd.toLocaleString()}</td><td>${vals.ref.toLocaleString()}</td><td class="${flags.length?'warn':'good'}">${flags.length?flags.join('; '):'Reporting'}</td></tr>`});
@@ -231,8 +235,8 @@ fs.forEach(k=>{let x=im.filter(r=>fac(r)===k),adm=sum(x,'adm'),scr=sum(x,'screen
 
 function tab(t){active=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById(t==='overview'?'tOverview':t==='executive'?'tExec':t==='imam'?'tImam':t==='miycn'?'tMiycn':t==='health'?'tHealth':'tQuality').classList.add('active');render()}
 function chart(id,type,labels,data,legend=false){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data:{labels,datasets:[{data}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:legend}}}})}
-function draw(a,im){let m={};a.forEach(r=>{let k=month(p(r,A.month))||'Unknown';m[k]=(m[k]||0)+1});chart('cMonth','line',Object.keys(m),Object.values(m));m={};a.forEach(r=>{let k=fname(fac(r));m[k]=(m[k]||0)+1});chart('cFacility','bar',Object.keys(m),Object.values(m));chart('cScreen','bar',['Normal','MAM','SAM','Oedema'],[sumFields(im,A.green),sumFields(im,A.yellow),sumFields(im,A.red),sumFields(im,A.oedema)]);chart('cExit','bar',['Recovered','Defaulted','Death','Non-recovered'],[sum(im,'rec'),sum(im,'defa'),sum(im,'death'),sum(im,'nonrec')])}
+function draw(a,im){let m={};a.forEach(r=>{let k=monthKey(r)||'Unknown';m[k]=(m[k]||0)+1});chart('cMonth','line',Object.keys(m),Object.values(m));m={};a.forEach(r=>{let k=fname(fac(r));m[k]=(m[k]||0)+1});chart('cFacility','bar',Object.keys(m),Object.values(m));chart('cScreen','bar',['Normal','MAM','SAM','Oedema'],[sumFields(im,A.green),sumFields(im,A.yellow),sumFields(im,A.red),sumFields(im,A.oedema)]);chart('cExit','bar',['Recovered','Defaulted','Death','Non-recovered'],[sum(im,'rec'),sum(im,'defa'),sum(im,'death'),sum(im,'nonrec')])}
 function matrixTable(){let fs=Object.keys(FAC),a=filtered();document.getElementById('matrix').innerHTML=fs.map(k=>{let f=FAC[k][0],lg=FAC[k][1],x=a.filter(r=>fac(r)===k),types=['IMAM','MIYCN','Health'];let has=t=>x.some(r=>reg(p(r,A.reg))===t);let last=x.map(r=>p(r,A.submitted)).filter(Boolean).sort().reverse()[0]||'';let complete=types.every(has);return `<tr><td>${f}</td><td>${lg}</td><td>${has('IMAM')?'✓':'—'}</td><td>${has('MIYCN')?'✓':'—'}</td><td>${has('Health')?'✓':'—'}</td><td>${last?new Date(last).toLocaleString():'—'}</td><td class="${complete?'good':'warn'}">${complete?'Complete':'Incomplete'}</td></tr>`}).join('')}
-function latestTable(a){document.getElementById('latest').innerHTML=a.slice().sort((x,y)=>String(p(y,A.submitted)).localeCompare(String(p(x,A.submitted)))).slice(0,100).map(r=>`<tr><td>${p(r,A.submitted)}</td><td>${reg(p(r,A.reg))}</td><td>${month(p(r,A.month))}</td><td>${lga(r)}</td><td>${fname(fac(r))}</td><td>${p(r,A.uuid)}</td></tr>`).join('')||'<tr><td colspan="6">No submissions.</td></tr>'}
+function latestTable(a){document.getElementById('latest').innerHTML=a.slice().sort((x,y)=>String(p(y,A.submitted)).localeCompare(String(p(x,A.submitted)))).slice(0,100).map(r=>`<tr><td>${p(r,A.submitted)}</td><td>${reg(p(r,A.reg))}</td><td>${year(r)}</td><td>${month(p(r,A.month))}</td><td>${lga(r)}</td><td>${fname(fac(r))}</td><td>${p(r,A.uuid)}</td></tr>`).join('')||'<tr><td colspan="7">No submissions.</td></tr>'}
 loadData();setInterval(loadData,300000);
 </script></body></html>
