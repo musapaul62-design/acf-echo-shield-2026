@@ -48,7 +48,7 @@ button{border:0;border-radius:8px;padding:10px 15px;background:#1769aa;color:#ff
 </div><div id="alerts" style="margin-top:12px"></div></section>
 
 <section class="panel"><div class="tabs">
-<button id="tOverview" class="active" onclick="tab('overview')">Overview</button><button id="tImam" onclick="tab('imam')">IMAM</button><button id="tMiycn" onclick="tab('miycn')">MIYCN</button><button id="tHealth" onclick="tab('health')">Health</button><button id="tQuality" onclick="tab('quality')">Data Quality</button>
+<button id="tOverview" class="active" onclick="tab('overview')">Overview</button><button id="tExec" onclick="tab('executive')">Executive</button><button id="tImam" onclick="tab('imam')">IMAM</button><button id="tMiycn" onclick="tab('miycn')">MIYCN</button><button id="tHealth" onclick="tab('health')">Health</button><button id="tQuality" onclick="tab('quality')">Data Quality</button>
 </div><div id="content"></div></section>
 
 <section class="charts">
@@ -112,7 +112,52 @@ function intelligence(a){
  alerts.innerHTML=alertItems.length?alertItems.map(x=>`<div class="alert ${x.c}"><strong>${x.title}</strong><span>${x.text}</span></div>`).join(''):'<div class="alert good"><strong>No MEAL alerts detected</strong><span>The current filtered data does not trigger the configured reporting or performance flags.</span></div>';
 }
 function render(){let a=filtered(),im=a.filter(r=>reg(p(r,A.reg))==='IMAM'),mi=a.filter(r=>reg(p(r,A.reg))==='MIYCN'),he=a.filter(r=>reg(p(r,A.reg))==='Health');kTotal.textContent=a.length.toLocaleString();kImam.textContent=im.length;kMiycn.textContent=mi.length;kHealth.textContent=he.length;kFac.textContent=uniq(a.map(fac)).length;intelligence(a);renderTab(a,im,mi,he);draw(a,im);matrixTable();latestTable(a)}
+function executiveView(a,im,mi,he){
+ const expected=document.getElementById('kExpected').textContent, complete=document.getElementById('kComplete').textContent, coverage=parseFloat(document.getElementById('kCoverage').textContent)||0;
+ const exits=sum(im,'exits'), rec=sum(im,'rec'), defa=sum(im,'defa'), death=sum(im,'death');
+ const recovery=pct(rec,exits), defaultRate=pct(defa,exits), deathRate=pct(death,exits);
+ const alertsCount=parseInt(document.getElementById('kAlerts').textContent)||0;
+ let overall='GOOD', cls='good';
+ if(coverage<90 || defaultRate>15 || deathRate>5 || recovery<75 || alertsCount>=4){overall='ATTENTION';cls='warn'}
+ if(coverage<75 || deathRate>10 || alertsCount>=7){overall='CRITICAL';cls='bad'}
+ const regs=['IMAM','MIYCN','Health'];
+ const facilityRows=Object.keys(FAC).map(k=>{
+   const x=a.filter(r=>fac(r)===k), ii=x.filter(r=>reg(p(r,A.reg))==='IMAM'), mm=x.filter(r=>reg(p(r,A.reg))==='MIYCN'), hh=x.filter(r=>reg(p(r,A.reg))==='Health');
+   const ex=sum(ii,'exits'), rr=pct(sum(ii,'rec'),ex), dr=pct(sum(ii,'defa'),ex), mr=pct(sum(ii,'death'),ex);
+   const has=regs.filter(t=>x.some(r=>reg(p(r,A.reg))===t)).length;
+   let score=has*20; if(ii.length&&ex){score+=Math.max(0,Math.min(20,rr/5));score-=Math.min(15,dr);score-=Math.min(20,mr*2)}
+   if(mm.length)score+=10;if(hh.length)score+=10; score=Math.max(0,score);
+   let flag=has<3?'Incomplete reporting':(mr>5?'High mortality':(dr>15?'High default':(ex&&rr<75?'Low recovery':'Within thresholds')));
+   return {k,name:FAC[k][0],lga:FAC[k][1],score,has,adm:sum(ii,'adm'),rec:sum(ii,'rec'),rr,dr,mr,mi:sum(mm,'miNew'),health:sum(hh,'opd'),flag};
+ }).sort((a,b)=>b.score-a.score);
+ const lgas=uniq(Object.values(FAC).map(x=>x[1])).map(lg=>{
+   const fs=facilityRows.filter(x=>x.lga===lg), ii=im.filter(r=>lga(r)===lg), mm=mi.filter(r=>lga(r)===lg), hh=he.filter(r=>lga(r)===lg);
+   const ex=sum(ii,'exits'), rr=pct(sum(ii,'rec'),ex), dr=pct(sum(ii,'defa'),ex), mr=pct(sum(ii,'death'),ex);
+   return {lg,fac:fs.length,reporting:fs.filter(x=>x.has===3).length,adm:sum(ii,'adm'),screen:sum(ii,'screen'),rr,dr,mr,mi:sum(mm,'miNew'),opd:sum(hh,'opd')};
+ }).sort((a,b)=>b.reporting-a.reporting||b.adm-a.adm);
+ const actions=[];
+ if(coverage<90) actions.push('Follow up missing facility/register/month reports and close the reporting gap.');
+ if(defaultRate>15) actions.push(`Review IMAM defaulting at programme level (${defaultRate.toFixed(1)}%) and identify affected facilities.`);
+ if(deathRate>5) actions.push(`Review IMAM mortality (${deathRate.toFixed(1)}%) and validate facility-level deaths and case management.`);
+ if(recovery<75) actions.push(`Review low IMAM recovery performance (${recovery.toFixed(1)}%) and investigate affected facilities.`);
+ if(facilityRows.some(x=>x.flag==='Incomplete reporting')) actions.push('Prioritize facilities with incomplete reporting across IMAM, MIYCN and Health registers.');
+ if(!actions.length) actions.push('No priority management action triggered by the configured thresholds in the current filters. Continue routine monitoring.');
+ c= document.getElementById('content');
+ c.innerHTML='<div class="panel" style="margin:0 0 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h2 style="margin-bottom:5px">Executive Management Command Centre</h2><div class="small">Live synthesis of the current filtered Kobo data. Use the filters above to focus the management view.</div></div><div class="card" style="min-width:170px;text-align:center"><div class="lbl">Overall project status</div><div class="val '+cls+'">'+overall+'</div></div></div></div>'+
+ '<div class="grid"><div class="card"><div class="lbl">Reporting completeness</div><div class="val '+(coverage>=90?'good':coverage>=75?'warn':'bad')+'">'+coverage.toFixed(1)+'%</div><div class="small">'+complete+' of '+expected+' expected units</div></div>'+
+ card('IMAM admissions',sum(im,'adm').toLocaleString(),'Current filters')+
+ rateCard('IMAM recovery',recovery.toFixed(1)+'%','Recovered ÷ exits',recovery>=75?'good':'warn')+
+ rateCard('IMAM default',defaultRate.toFixed(1)+'%','Defaulted ÷ exits',defaultRate>15?'warn':'good')+
+ rateCard('IMAM mortality',deathRate.toFixed(1)+'%','Deaths ÷ exits',deathRate>5?'bad':'good')+'</div>'+
+ '<div class="grid" style="margin-top:12px">'+card('MIYCN beneficiaries',sum(mi,'miNew').toLocaleString(),'New beneficiaries')+card('Health OPD',sum(he,'opd').toLocaleString(),'Consultations')+card('Facilities fully reporting',facilityRows.filter(x=>x.has===3).length+'/'+facilityRows.length,'All three registers')+card('Active alerts',alertsCount.toLocaleString(),'Current filters')+'</div>'+
+ '<h3 style="margin:22px 0 10px">Priority management actions</h3><div>'+actions.map((x,i)=>'<div class="alert '+(i===0&&overall==='CRITICAL'?'bad':'warn')+'"><strong>Priority '+(i+1)+':</strong> '+x+'</div>').join('')+'</div>'+
+ '<h3 style="margin:22px 0 10px">LGA performance</h3><div class="table"><table><thead><tr><th>LGA</th><th>Facilities</th><th>Fully reporting</th><th>Admissions</th><th>Screened</th><th>Recovery %</th><th>Default %</th><th>Death %</th><th>MIYCN beneficiaries</th><th>OPD</th></tr></thead><tbody>'+
+ lgas.map(x=>'<tr><td>'+x.lg+'</td><td>'+x.fac+'</td><td>'+x.reporting+'/'+x.fac+'</td><td>'+x.adm.toLocaleString()+'</td><td>'+x.screen.toLocaleString()+'</td><td class="'+(x.rr>=75?'good':'warn')+'">'+x.rr.toFixed(1)+'%</td><td class="'+(x.dr>15?'warn':'good')+'">'+x.dr.toFixed(1)+'%</td><td class="'+(x.mr>5?'bad':'good')+'">'+x.mr.toFixed(1)+'%</td><td>'+x.mi.toLocaleString()+'</td><td>'+x.opd.toLocaleString()+'</td></tr>').join('')+'</tbody></table></div>'+
+ '<h3 style="margin:22px 0 10px">Facility performance ranking</h3><div class="table"><table><thead><tr><th>Rank</th><th>Facility</th><th>LGA</th><th>Registers reporting</th><th>IMAM admissions</th><th>Recovery %</th><th>Default %</th><th>Death %</th><th>MIYCN</th><th>OPD</th><th>Management flag</th></tr></thead><tbody>'+
+ facilityRows.map((x,i)=>'<tr><td>'+ (i+1) +'</td><td>'+x.name+'</td><td>'+x.lga+'</td><td>'+x.has+'/3</td><td>'+x.adm.toLocaleString()+'</td><td class="'+(x.rr>=75||!x.adm?'good':'warn')+'">'+x.rr.toFixed(1)+'%</td><td class="'+(x.dr>15?'warn':'good')+'">'+x.dr.toFixed(1)+'%</td><td class="'+(x.mr>5?'bad':'good')+'">'+x.mr.toFixed(1)+'%</td><td>'+x.mi.toLocaleString()+'</td><td>'+x.health.toLocaleString()+'</td><td class="'+(x.flag==='Within thresholds'?'good':x.flag.includes('mortality')||x.flag.includes('default')?'warn':'warn')+'">'+x.flag+'</td></tr>').join('')+'</tbody></table></div>';
+}
 function renderTab(a,im,mi,he){let c=document.getElementById('content');
+if(active==='executive'){executiveView(a,im,mi,he);return;}
 if(active==='overview')c.innerHTML='<div class="grid">'+card('MUAC screened',sum(im,'screen').toLocaleString(),'IMAM')+card('SAM / Red',sumFields(im,A.red).toLocaleString(),'MUAC screening')+card('MAM / Yellow',sumFields(im,A.yellow).toLocaleString(),'MUAC screening')+card('Normal / Green',sumFields(im,A.green).toLocaleString(),'MUAC screening')+card('Closing RUTF sachets',sum(im,'rutfS').toLocaleString(),'Stock balance')+'</div>';
 if(active==='imam'){
  let admissions=sum(im,'adm'), exits=sum(im,'exits'), rec=sum(im,'rec'), defa=sum(im,'defa'), death=sum(im,'death'), nonrec=sum(im,'nonrec');
@@ -184,7 +229,7 @@ fs.forEach(k=>{let x=mi.filter(r=>fac(r)===k),nb=sum(x,'miNew'),cg=sum(x,'miSkil
 function imamFacilityTable(im){let fs=Object.keys(FAC),html='<div class="table"><table><thead><tr><th>Facility</th><th>LGA</th><th>Admissions</th><th>Screened</th><th>SAM %</th><th>Recovered</th><th>Recovery %</th><th>Default %</th><th>Death %</th><th>RUTF sachets</th><th>Flag</th></tr></thead><tbody>';
 fs.forEach(k=>{let x=im.filter(r=>fac(r)===k),adm=sum(x,'adm'),scr=sum(x,'screen'),sam=sumFields(x,A.red),ex=sum(x,'exits'),rec=sum(x,'rec'),defa=sum(x,'defa'),death=sum(x,'death'),rutf=sum(x,'rutfS');let rr=pct(rec,ex),dr=pct(defa,ex),mr=pct(death,ex),flags=[];if(!x.length)flags.push('No IMAM');if(ex&&rr<75)flags.push('Low recovery');if(ex&&dr>15)flags.push('High default');if(ex&&mr>5)flags.push('High mortality');html+=`<tr><td>${FAC[k][0]}</td><td>${FAC[k][1]}</td><td>${adm.toLocaleString()}</td><td>${scr.toLocaleString()}</td><td>${pct(sam,scr).toFixed(1)}%</td><td>${rec.toLocaleString()}</td><td class="${rr>=75?'good':'warn'}">${rr.toFixed(1)}%</td><td class="${dr>15?'warn':'good'}">${dr.toFixed(1)}%</td><td class="${mr>5?'bad':'good'}">${mr.toFixed(1)}%</td><td>${rutf.toLocaleString()}</td><td class="${flags.length?'warn':'good'}">${flags.length?flags.join('; '):'Within thresholds'}</td></tr>`});return html+'</tbody></table></div>'}
 
-function tab(t){active=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById(t==='overview'?'tOverview':t==='imam'?'tImam':t==='miycn'?'tMiycn':t==='health'?'tHealth':'tQuality').classList.add('active');render()}
+function tab(t){active=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));document.getElementById(t==='overview'?'tOverview':t==='executive'?'tExec':t==='imam'?'tImam':t==='miycn'?'tMiycn':t==='health'?'tHealth':'tQuality').classList.add('active');render()}
 function chart(id,type,labels,data,legend=false){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data:{labels,datasets:[{data}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:legend}}}})}
 function draw(a,im){let m={};a.forEach(r=>{let k=month(p(r,A.month))||'Unknown';m[k]=(m[k]||0)+1});chart('cMonth','line',Object.keys(m),Object.values(m));m={};a.forEach(r=>{let k=fname(fac(r));m[k]=(m[k]||0)+1});chart('cFacility','bar',Object.keys(m),Object.values(m));chart('cScreen','bar',['Normal','MAM','SAM','Oedema'],[sumFields(im,A.green),sumFields(im,A.yellow),sumFields(im,A.red),sumFields(im,A.oedema)]);chart('cExit','bar',['Recovered','Defaulted','Death','Non-recovered'],[sum(im,'rec'),sum(im,'defa'),sum(im,'death'),sum(im,'nonrec')])}
 function matrixTable(){let fs=Object.keys(FAC),a=filtered();document.getElementById('matrix').innerHTML=fs.map(k=>{let f=FAC[k][0],lg=FAC[k][1],x=a.filter(r=>fac(r)===k),types=['IMAM','MIYCN','Health'];let has=t=>x.some(r=>reg(p(r,A.reg))===t);let last=x.map(r=>p(r,A.submitted)).filter(Boolean).sort().reverse()[0]||'';let complete=types.every(has);return `<tr><td>${f}</td><td>${lg}</td><td>${has('IMAM')?'✓':'—'}</td><td>${has('MIYCN')?'✓':'—'}</td><td>${has('Health')?'✓':'—'}</td><td>${last?new Date(last).toLocaleString():'—'}</td><td class="${complete?'good':'warn'}">${complete?'Complete':'Incomplete'}</td></tr>`}).join('')}
