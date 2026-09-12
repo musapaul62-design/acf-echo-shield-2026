@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GHIV Africa | SCI-NHF Live MEAL Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f4f6f8;color:#172033}
+header{background:#101828;color:#fff;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{font-size:22px;margin:0 0 4px}.sub{font-size:12px;color:#cbd5e1}
+button{background:#175cd3;color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}
+main{max-width:1500px;margin:auto;padding:20px}.panel,.card{background:#fff;border:1px solid #e4e7ec;border-radius:12px;box-shadow:0 1px 2px #00000008}
+.panel{padding:16px;margin-bottom:18px}.panel h2{font-size:16px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.card{padding:15px}.lbl{font-size:12px;color:#667085}.val{font-size:27px;font-weight:750;margin-top:7px}.note{font-size:11px;color:#667085;margin-top:3px}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}label{display:block;font-size:11px;color:#667085;margin-bottom:5px}
+select,input{width:100%;padding:9px;border:1px solid #d0d5dd;border-radius:8px;background:white}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chart{height:330px}.chart canvas{height:270px!important}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}.tab{background:#eef2f6;color:#344054}.tab.active{background:#175cd3;color:white}
+.table{overflow:auto;max-height:500px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:9px;border-bottom:1px solid #eaecf0;text-align:left;white-space:nowrap}th{background:#f9fafb;position:sticky;top:0}
+.status{font-size:12px;color:#667085}.ok{color:#079455}.err{color:#d92d20}
+@media(max-width:1000px){.grid,.filters,.charts{grid-template-columns:1fr 1fr}}@media(max-width:600px){main{padding:12px}.grid,.filters,.charts{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><div><h1>GHIV Africa | SCI-NHF Live MEAL Dashboard</h1><div class="sub">IMAM • MIYCN • Health Data | KoboToolbox live feed</div></div><button id="refresh" onclick="loadData()">↻ Refresh Data</button></header>
+<main>
+<section class="panel"><div class="status" id="status">Connecting to KoboToolbox…</div></section>
+
+<section class="panel"><h2>Filters</h2><div class="filters">
+<div><label>Register</label><select id="register" onchange="render()"><option value="">All registers</option><option value="IMAM">IMAM</option><option value="MIYCN">MIYCN</option><option value="Health Data">Health Data</option></select></div>
+<div><label>Reporting month</label><select id="month" onchange="render()"><option value="">All months</option></select></div>
+<div><label>LGA</label><select id="lga" onchange="render()"><option value="">All LGAs</option></select></div>
+<div><label>Facility</label><select id="facility" onchange="render()"><option value="">All facilities</option></select></div>
+<div><label>Submission date</label><input id="date" type="date" onchange="render()"></div>
+</div></section>
+
+<section class="grid">
+<div class="card"><div class="lbl">Total submissions</div><div class="val" id="total">0</div><div class="note">Current filters</div></div>
+<div class="card"><div class="lbl">IMAM</div><div class="val" id="imam">0</div><div class="note">Nutrition treatment</div></div>
+<div class="card"><div class="lbl">MIYCN</div><div class="val" id="miycn">0</div><div class="note">Counselling & promotion</div></div>
+<div class="card"><div class="lbl">Health Data</div><div class="val" id="health">0</div><div class="note">Routine health services</div></div>
+<div class="card"><div class="lbl">Facilities reporting</div><div class="val" id="facilities">0</div><div class="note">Unique facilities</div></div>
+</section>
+
+<section class="panel"><div class="tabs">
+<button class="tab active" id="allTab" onclick="showTab('all')">Overview</button>
+<button class="tab" id="imamTab" onclick="showTab('imam')">IMAM</button>
+<button class="tab" id="miycnTab" onclick="showTab('miycn')">MIYCN</button>
+<button class="tab" id="healthTab" onclick="showTab('health')">Health Data</button>
+</div><div id="tabContent"></div></section>
+
+<section class="charts">
+<div class="panel chart"><h2>Submissions by register</h2><canvas id="registerChart"></canvas></div>
+<div class="panel chart"><h2>Submissions by LGA</h2><canvas id="lgaChart"></canvas></div>
+</section>
+
+<section class="panel"><h2>Latest submissions</h2><div class="table"><table><thead><tr><th>Submitted</th><th>Register</th><th>Month</th><th>LGA</th><th>Facility</th><th>UUID</th></tr></thead><tbody id="latest"></tbody></table></div></section>
+</main>
+
+<script>
+let rows=[],charts={},activeTab='all';
+const A={
+reg:["register_form","form_type","register"],month:["reporting_month","report_month","month"],lga:["lga","LGA","location_lga"],
+facility:["facility","facility_name","health_facility"],submitted:["end","_submission_time","submission_time","start"],uuid:["_uuid","uuid","_id"],
+muac:["imam_muac_screened","muac_screened","total_muac_screened"],sam:["imam_sam","sam","sam_cases","sam_screened"],
+mam:["imam_mam","mam","mam_cases","mam_screened"],normal:["imam_normal","normal","normal_cases","normal_screened"],
+rutf:["imam_rutf_stock","rutf_stock","rutf_balance"],recover:["imam_recovered","recovered","recoveries"],
+death:["imam_death","death","deaths"],defaulted:["imam_defaulted","defaulted","defaults"],nonrec:["imam_non_recovered","non_recovered","nonrecoveries"],
+miycnSkill:["miycn_skilled_counselling","miycn_skilled_counselling_total","skilled_counselling"],miycnGroup:["miycn_promotion_group_counselling","miycn_group_counselling","group_counselling"],
+miycnInfant:["miycn_infants_under_6_months","miycn_infants_6_months","infants_under_6_months"]
+};
+function pick(o,keys){for(const k of keys)if(o[k]!==undefined&&o[k]!==null&&o[k]!=="")return o[k];return""}
+function n(v){let x=parseFloat(v);return Number.isFinite(x)?x:0}
+function reg(v){v=String(v||"").toLowerCase();return v.includes("imam")?"IMAM":v.includes("miycn")||v.includes("miyc")?"MIYCN":v.includes("health")?"Health Data":"Unknown"}
+function uniq(a){return [...new Set(a.filter(Boolean).map(String))].sort()}
+function options(id,vals){let s=document.getElementById(id),old=s.value;s.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${v}</option>`).join("");if(vals.includes(old))s.value=old}
+async function loadData(){
+ let b=document.getElementById("refresh");b.disabled=true;status.className="status";status.textContent="Refreshing live data from KoboToolbox…";
+ try{let r=await fetch("/api/data");let x=await r.json();if(!r.ok)throw Error(x.error||"API request failed");rows=x.results||[];
+ options("month",uniq(rows.map(x=>pick(x,A.month))));options("lga",uniq(rows.map(x=>pick(x,A.lga))));options("facility",uniq(rows.map(x=>pick(x,A.facility))));
+ status.className="status ok";status.textContent=`Live feed updated: ${rows.length.toLocaleString()} submissions. Last refresh: ${new Date().toLocaleString()}`;render()
+ }catch(e){status.className="status err";status.textContent="Connection failed: "+e.message}finally{b.disabled=false}
+}
+function filtered(){let r=document.getElementById("register").value,m=document.getElementById("month").value,l=document.getElementById("lga").value,f=document.getElementById("facility").value,d=document.getElementById("date").value;
+ return rows.filter(x=>(!r||reg(pick(x,A.reg))===r)&&(!m||String(pick(x,A.month))===m)&&(!l||String(pick(x,A.lga))===l)&&(!f||String(pick(x,A.facility))===f)&&(!d||String(pick(x,A.submitted)).slice(0,10)>=d))}
+function sum(a,key){return a.reduce((s,x)=>s+n(pick(x,A[key])),0)}
+function render(){
+ let a=filtered(), rs=a.map(x=>reg(pick(x,A.reg)));total.textContent=a.length.toLocaleString();imam.textContent=rs.filter(x=>x==="IMAM").length;miycn.textContent=rs.filter(x=>x==="MIYCN").length;health.textContent=rs.filter(x=>x==="Health Data").length;facilities.textContent=uniq(a.map(x=>pick(x,A.facility))).length;
+ drawCharts(a);renderTab(a);renderLatest(a)
+}
+function renderTab(a){
+ let im=a.filter(x=>reg(pick(x,A.reg))==="IMAM"),mi=a.filter(x=>reg(pick(x,A.reg))==="MIYCN"),he=a.filter(x=>reg(pick(x,A.reg))==="Health Data");
+ let x=a;if(activeTab==="imam")x=im;if(activeTab==="miycn")x=mi;if(activeTab==="health")x=he;
+ if(activeTab==="all"){tabContent.innerHTML=`<div class="grid"><div class="card"><div class="lbl">MUAC screened</div><div class="val">${sum(im,"muac").toLocaleString()}</div></div><div class="card"><div class="lbl">SAM</div><div class="val">${sum(im,"sam").toLocaleString()}</div></div><div class="card"><div class="lbl">MAM</div><div class="val">${sum(im,"mam").toLocaleString()}</div></div><div class="card"><div class="lbl">Normal</div><div class="val">${sum(im,"normal").toLocaleString()}</div></div><div class="card"><div class="lbl">RUTF stock</div><div class="val">${sum(im,"rutf").toLocaleString()}</div></div></div>`;return}
+ if(activeTab==="imam"){tabContent.innerHTML=`<div class="grid"><div class="card"><div class="lbl">MUAC screened</div><div class="val">${sum(x,"muac").toLocaleString()}</div></div><div class="card"><div class="lbl">SAM</div><div class="val">${sum(x,"sam").toLocaleString()}</div></div><div class="card"><div class="lbl">MAM</div><div class="val">${sum(x,"mam").toLocaleString()}</div></div><div class="card"><div class="lbl">Recovered</div><div class="val">${sum(x,"recover").toLocaleString()}</div></div><div class="card"><div class="lbl">RUTF stock</div><div class="val">${sum(x,"rutf").toLocaleString()}</div></div></div>`;return}
+ if(activeTab==="miycn"){tabContent.innerHTML=`<div class="grid"><div class="card"><div class="lbl">Skilled counselling</div><div class="val">${sum(x,"miycnSkill").toLocaleString()}</div></div><div class="card"><div class="lbl">Group counselling / promotion</div><div class="val">${sum(x,"miycnGroup").toLocaleString()}</div></div><div class="card"><div class="lbl">Infants &lt;6 months</div><div class="val">${sum(x,"miycnInfant").toLocaleString()}</div></div><div class="card"><div class="lbl">MIYCN submissions</div><div class="val">${x.length.toLocaleString()}</div></div><div class="card"><div class="lbl">Facilities</div><div class="val">${uniq(x.map(z=>pick(z,A.facility))).length}</div></div></div>`;return}
+ if(activeTab==="health"){tabContent.innerHTML=`<div class="grid"><div class="card"><div class="lbl">Health submissions</div><div class="val">${x.length.toLocaleString()}</div></div><div class="card"><div class="lbl">Facilities</div><div class="val">${uniq(x.map(z=>pick(z,A.facility))).length}</div></div><div class="card"><div class="lbl">LGAs</div><div class="val">${uniq(x.map(z=>pick(z,A.lga))).length}</div></div><div class="card"><div class="lbl">Latest update</div><div class="val" style="font-size:16px">${pick(x.slice().sort((a,b)=>String(pick(b,A.submitted)).localeCompare(String(pick(a,A.submitted))))[0]||{},A.submitted)||"—"}</div></div><div class="card"><div class="lbl">Data feed</div><div class="val" style="font-size:16px">LIVE</div></div></div>`}
+}
+function showTab(t){activeTab=t;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.getElementById(t==="all"?"allTab":t+"Tab").classList.add("active");render()}
+function drawCharts(a){
+ let m={};a.forEach(x=>{let k=reg(pick(x,A.reg));m[k]=(m[k]||0)+1});chart("registerChart","doughnut",Object.keys(m),Object.values(m),true);
+ m={};a.forEach(x=>{let k=pick(x,A.lga)||"Unknown";m[k]=(m[k]||0)+1});chart("lgaChart","bar",Object.keys(m),Object.values(m),false)
+}
+function chart(id,type,labels,data,legend){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data:{labels,datasets:[{data}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:legend}}}})}
+function renderLatest(a){latest.innerHTML=a.slice().sort((x,y)=>String(pick(y,A.submitted)).localeCompare(String(pick(x,A.submitted)))).slice(0,100).map(x=>`<tr><td>${pick(x,A.submitted)}</td><td>${reg(pick(x,A.reg))}</td><td>${pick(x,A.month)}</td><td>${pick(x,A.lga)}</td><td>${pick(x,A.facility)}</td><td>${pick(x,A.uuid)}</td></tr>`).join("")||'<tr><td colspan="6">No submissions found.</td></tr>'}
+loadData();setInterval(loadData,300000);
+</script></body></html>
